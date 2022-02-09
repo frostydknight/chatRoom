@@ -33,5 +33,37 @@ io.on("connection", (socket) => {
             username: pUser.username,
             text: `Welcome ${pUser.username}`,
         })
+
+        //displays a joined room message to all other users in the room except the user who joined
+        socket.broadcast.to(pUser.room).emit("message", {
+            userID: pUser.id,
+            username: pUser.username,
+            text: `${pUser.username} has joined the chat`,
+        })
+    })
+
+    socket.on("chat", (text) => {
+        //gets the room user and message sent
+        const pUser = getCurrentUser(socket.id)
+
+        io.to(pUser.room).emit("message", {
+            userID: pUser.id,
+            username: pUser.username,
+            text: text,
+        })
+    })
+
+    //when the user exits the room
+    socket.on("disconnect", () => {
+        //the user is deleted from the array and the left room message is displayed
+        const pUser = userDisconnect(socket.id)
+
+        if (pUser){
+            io.to(pUser.room).emit("message", {
+                userID: pUser.id,
+                username: pUser.username,
+                text: `${pUser.username} has left the room`
+            })
+        }
     })
 })
